@@ -14,6 +14,8 @@ set -e
 INSTALL_NUTTX="true"
 INSTALL_SIM="true"
 INSTALL_ARCH=`uname -m`
+INSTALL_GAZEBO_CLASSIC="false"
+INSTALL_GAZEBO="false"
 
 # Parse arguments
 for arg in "$@"
@@ -24,6 +26,14 @@ do
 
 	if [[ $arg == "--no-sim-tools" ]]; then
 		INSTALL_SIM="false"
+	fi
+
+	if [[ $arg == "--gazebo-classic" ]]; then
+		INSTALL_GAZEBO_CLASSIC="true"
+	fi
+
+	if [[ $arg == "--gazebo-harmonic" ]]; then
+		INSTALL_GAZEBO="true"
 	fi
 done
 
@@ -220,7 +230,7 @@ if [[ $INSTALL_SIM == "true" ]]; then
 	sudo update-alternatives --set java $(update-alternatives --list java | grep "java-$java_version")
 
 	# Gazebo / Gazebo classic installation
-	if [[ "${UBUNTU_RELEASE}" == "22.04" ]]; then
+	if [[ $INSTALL_GAZEBO == "true" ]]; then
 		echo "Gazebo (Garden) will be installed"
 		echo "Earlier versions will be removed"
 		# Add Gazebo binary repository
@@ -229,8 +239,9 @@ if [[ $INSTALL_SIM == "true" ]]; then
 		sudo apt-get update -y --quiet
 
 		# Install Gazebo
-		gazebo_packages="gz-garden"
-	else
+		gz_packages="gz-harmonic ros-humble-ros-gzharmonic"
+	fi
+	if [[ $INSTALL_GAZEBO_CLASSIC == "true" ]]; then
 		sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
 		wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 		# Update list, since new gazebo-stable.list has been added
@@ -249,6 +260,7 @@ if [[ $INSTALL_SIM == "true" ]]; then
 
 	sudo DEBIAN_FRONTEND=noninteractive apt-get -y --quiet --no-install-recommends install \
 		dmidecode \
+		$gz_packages \
 		$gazebo_packages \
 		gstreamer1.0-plugins-bad \
 		gstreamer1.0-plugins-base \
